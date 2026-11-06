@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f3ee">
+
+    <title>The Digital Me — Aryan Sahu</title>
+<meta name="description" content="The personal portfolio of Aryan Sahu — aspiring creative developer, curious builder, and technology enthusiast.">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Construction worker workspace -->
+    <div id="worker-layer" aria-hidden="true"></div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to night theme">
+        <span class="theme-icon">☾</span><span class="theme-label">Night</span>
+    </button>
+    <div id="bot-message" class="bot-message" role="status" aria-live="polite"></div>
+
+    <!-- Small construction status panel -->
+    <div class="crew-panel collapsed" id="crew-panel">
+        <div class="crew-heading">
+            <span class="crew-live"></span>
+            <span>THE CREATIVE CREW</span>
+            <button id="panel-toggle" aria-label="Expand crew panel" aria-expanded="false">+</button>
+        </div>
+
+        <div class="crew-members">
+            <div class="crew-member">
+                <span class="crew-avatar architect">A</span>
+                <div>
+                    <strong>Architect</strong>
+                    <small id="architect-status">Waiting for work</small>
+                </div>
+            </div>
+
+            <div class="crew-member">
+                <span class="crew-avatar writer">W</span>
+                <div>
+                    <strong>Writer</strong>
+                    <small id="writer-status">Waiting for work</small>
+                </div>
+            </div>
+
+            <div class="crew-member">
+                <span class="crew-avatar artist">✦</span>
+                <div>
+                    <strong>Artist</strong>
+                    <small id="artist-status">Waiting for work</small>
+                </div>
+            </div>
+
+            <div class="crew-member">
+                <span class="crew-avatar finisher">F</span>
+                <div>
+                    <strong>Finisher</strong>
+                    <small id="finisher-status">Waiting for work</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="crew-controls">
+            <button id="pause-btn">Ⅱ Pause</button>
+            <button id="replay-btn">↻ Replay</button>
+            <button id="skip-btn">Skip →</button>
+        </div>
+    </div>
+
+    <!-- Actual portfolio is constructed here -->
+    <main id="website">
+
+        <div id="construction-message">
+            <span class="message-dot"></span>
+            A small creative crew is at work.
+        </div>
+
+        <div id="site-root"></div>
+
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script>
+    /* =====================================================
+       THE DIGITAL ME — SWARM CONSTRUCTION ENGINE
+       ===================================================== */
+
+    const siteRoot = document.getElementById("site-root");
+    const workerLayer = document.getElementById("worker-layer");
+
+    const workerStatus = {
+        architect: document.getElementById("architect-status"),
+        writer: document.getElementById("writer-status"),
+        artist: document.getElementById("artist-status"),
+        finisher: document.getElementById("finisher-status")
+    };
+
+    let paused = false;
+    let skipped = false;
+    let running = false;
+    let constructionId = 0;
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function waitForResume(id) {
+        while (paused && !skipped && id === constructionId) {
+            await sleep(100);
+        }
+
+        if (id !== constructionId) {
+            throw new Error("Construction restarted");
+        }
+    }
+
+    async function delay(ms, id) {
+        await waitForResume(id);
+
+        if (skipped) return;
+
+        await sleep(ms);
+        await waitForResume(id);
+    }
+
+    function setStatus(worker, text) {
+        if (workerStatus[worker]) {
+            workerStatus[worker].textContent = text;
+        }
+    }
+
+    function createWorker(name, icon, color, role) {
+        const worker = document.createElement("div");
+
+        worker.className = "worker-cursor";
+        worker.style.setProperty("--worker-color", color);
+
+        worker.innerHTML = `
+            <div class="worker-character" aria-hidden="true">
+                <span class="bot-eyes"><i></i><i></i></span>
+                <span class="bot-smile"></span>
+            </div>
+            <div class="worker-label">
+                <strong>${name}</strong>
+                <small>${role}</small>
+            </div>
+            <div class="worker-trail"></div>
+        `;
+
+        workerLayer.appendChild(worker);
+
+        return worker;
+    }
+
+    const workers = {
+        architect: createWorker("Architect", "☺", randomBotColor(), "LAYOUT"),
+        writer: createWorker("Writer", "☺", randomBotColor(), "CONTENT"),
+        artist: createWorker("Artist", "☺", randomBotColor(), "VISUALS"),
+        finisher: createWorker("Finisher", "☺", randomBotColor(), "DETAILS")
+    };
+
+    function randomBotColor() {
+        const colors = ["#6C73D8", "#D77B51", "#4A9D83", "#B28A48", "#C16F9D", "#438DA8", "#8A78C5"];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function showBotMessage(message, anchor) {
+        const bubble = document.getElementById("bot-message");
+        bubble.textContent = message;
+        bubble.classList.add("visible");
+        if (anchor) {
+            const rect = anchor.getBoundingClientRect();
+            bubble.style.left = `${Math.min(window.innerWidth - 230, Math.max(12, rect.left + rect.width / 2 - 100))}px`;
+            bubble.style.top = `${Math.max(12, rect.top - 55)}px`;
+        }
+        clearTimeout(showBotMessage.timer);
+        showBotMessage.timer = setTimeout(() => bubble.classList.remove("visible"), 2000);
+    }
+
+    async function moveWorker(worker, target, offsetX = 0, offsetY = 0) {
+        if (!target) return Promise.resolve();
+
+        let rect = target.getBoundingClientRect();
+
+        if (rect.top < 90 || rect.bottom > window.innerHeight - 80) {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            await sleep(420);
+            rect = target.getBoundingClientRect();
+        }
+
+        const x = rect.left + rect.width / 2 + offsetX;
+        const y = rect.top + rect.height / 2 + offsetY;
+
+        worker.style.transform = `translate(${x}px, ${y}px)`;
+        worker.classList.add("worker-active");
+
+        return sleep(350);
+    }
+
+    function hideWorker(worker) {
+        worker.classList.remove("worker-active");
+    }
+
+    function createSection(id, className = "") {
+        const section = document.createElement("section");
+
+        section.id = id;
+        section.className = `portfolio-section ${className}`;
+
+        section.innerHTML = `
+            <div class="section-inner">
+                <div class="section-content"></div>
+            </div>
+        `;
+
+        siteRoot.appendChild(section);
+        requestAnimationFrame(() => section.scrollIntoView({ behavior: "smooth", block: "start" }));
+
+        return section;
+    }
+
+    function createElement(tag, className, text = "") {
+        const element = document.createElement(tag);
+
+        if (className) element.className = className;
+        if (text) element.textContent = text;
+
+        return element;
+    }
+
+    async function typeText(element, text, id, speed = 18) {
+        if (!element) return;
+        const value = String(text ?? "");
+        element.textContent = "";
+        const fragment = document.createDocumentFragment();
+        const letters = [];
+
+        for (const character of value) {
+            const tile = document.createElement("span");
+            tile.className = character === " " ? "print-space" : "print-letter";
+            tile.textContent = character;
+            fragment.appendChild(tile);
+            letters.push(tile);
+        }
+        element.appendChild(fragment);
+
+        const sectionWriters = Array.from({ length: 4 }, (_, index) =>
+            createWorker(`Writer ${index + 1}`, "☺", randomBotColor(), "LETTER TILES")
+        );
+
+        for (let index = 0; index < letters.length; index++) {
+            await waitForResume(id);
+            if (skipped) {
+                element.textContent = value;
+                return;
+            }
+            const tile = letters[index];
+            tile.classList.add("letter-built");
+            if (index % 4 === 0) {
+                const rect = tile.getBoundingClientRect();
+                const bot = sectionWriters[(index / 4) % sectionWriters.length];
+                bot.style.transform =
+                    `translate(${rect.left + rect.width / 2}px, ${rect.top + rect.height / 2}px)`;
+                bot.classList.add("worker-active");
+            }
+            await sleep(characterDelay(tile.textContent, speed));
+        }
+        sectionWriters.forEach(bot => {
+            hideWorker(bot);
+            bot.remove();
+        });
+    }
+
+    function characterDelay(character, speed) {
+        return character === " " ? Math.max(3, speed * 0.25) : Math.max(3, speed * 0.35);
+    }
+
+    async function printImageWithSwarm(frame, id) {
+        if (!frame) return;
+        const photo = frame.querySelector("img");
+        const placeholder = frame.querySelector(".photo-placeholder");
+        if (!photo || !placeholder) return;
+
+        const mosaic = document.createElement("div");
+        mosaic.className = "image-print-grid";
+        placeholder.appendChild(mosaic);
+
+        const tiles = [];
+        const columns = 5;
+        const rows = 2;
+        for (let row = 0; row < rows; row++) {
+            for (let column = 0; column < columns; column++) {
+                const tile = document.createElement("span");
+                tile.className = "image-print-tile";
+                tile.style.setProperty("--tile-x", `${column * 100 / (columns - 1)}%`);
+                tile.style.setProperty("--tile-y", `${row * 100 / (rows - 1)}%`);
+                tile.style.setProperty("--tile-col", column);
+                tile.style.setProperty("--tile-row", row);
+                if (photo.getAttribute("src")) {
+                    tile.style.backgroundImage = `url("${photo.getAttribute("src")}")`;
+                    tile.style.backgroundSize = `${columns * 100}% ${rows * 100}%`;
+                    tile.style.backgroundPosition = `${column * 100 / (columns - 1)}% ${row * 100}%`;
+                }
+                mosaic.appendChild(tile);
+                tiles.push(tile);
+            }
+        }
+
+        const imageBots = Array.from({ length: 10 }, (_, index) =>
+            createWorker(`Pixel Bot ${index + 1}`, "☺", randomBotColor(), "IMAGE TILE")
+        );
+        const shuffled = tiles.map((_, index) => index).sort(() => Math.random() - 0.5);
+
+        for (let botIndex = 0; botIndex < shuffled.length; botIndex++) {
+            await waitForResume(id);
+            if (skipped) break;
+            const tileIndex = shuffled[botIndex];
+            const tile = tiles[tileIndex];
+            const bot = imageBots[botIndex];
+            const rect = tile.getBoundingClientRect();
+            bot.style.transform = `translate(${rect.left + rect.width / 2}px, ${rect.top + rect.height / 2}px)`;
+            bot.classList.add("worker-active");
+            tile.classList.add("printed");
+            await sleep(85);
+        }
+
+        imageBots.forEach(bot => {
+            hideWorker(bot);
+            bot.remove();
+        });
+        mosaic.remove();
+        if (photo.complete && photo.naturalWidth > 0) photo.classList.add("photo-printed");
+        else placeholder.classList.add("photo-printed");
+        showBotMessage("How are you? 😊", frame);
+    }
+
+    async function drawElement(element, id) {
+        if (!element) return;
+
+        element.classList.add("drawing");
+
+        await delay(450, id);
+
+        element.classList.add("drawn");
+        element.classList.remove("drawing");
+    }
+
+    async function createNavigation(data, id) {
+        const nav = document.createElement("header");
+
+        nav.className = "site-header";
+        nav.innerHTML = `
+            <div class="header-inner">
+                <a class="brand" href="#home">
+                    <span class="brand-mark">✳</span>
+                    <span class="brand-name"></span>
+                </a>
+
+                <nav class="main-nav" aria-label="Main navigation">
+                  <a href="#about">About</a>
+                  <a href="#education">Education</a>
+                  <a href="#skills">Skills</a>
+                  <a href="#projects">Projects</a>
+                  <a href="#journey">Journey</a>
+                </nav>
+
+                <a href="#contact" class="nav-contact">
+                    Let's talk <span>↗</span>
+                </a>
+            </div>
+        `;
+
+        siteRoot.appendChild(nav);
+
+        await moveWorker(workers.architect, nav);
+
+        nav.classList.add("constructed");
+
+        const brand = nav.querySelector(".brand-name");
+
+        await moveWorker(workers.writer, brand);
+
+        await typeText(brand, data.site.brand, id, 30);
+
+        await moveWorker(workers.finisher, nav);
+
+        nav.classList.add("polished");
+
+        return nav;
+    }
+
+    async function constructHero(data, id) {
+        const section = createSection("home", "hero-section");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <div class="eyebrow"></div>
+                    <h1 class="hero-title"></h1>
+                    <p class="hero-summary"></p>
+
+                    <div class="hero-actions">
+                        <a href="#projects" class="primary-button">
+                            Explore my work <span>↗</span>
+                        </a>
+
+                        <a href="#about" class="text-button">
+                            More about me ↓
+                        </a>
+                    </div>
+
+                    <div class="hero-availability">
+                        <span class="availability-dot"></span>
+                        <span class="availability-text"></span>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="photo-frame">
+                        <div class="photo-placeholder">
+                          <img
+                              src="profile.jpg"
+                              alt="Portrait of Aryan Sahu"
+                              onload="this.classList.add('photo-printed');"
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                          >
+
+                          <div class="photo-fallback">
+                              <span class="photo-symbol">AS</span>
+                              <strong>ARYAN SAHU</strong>
+                              <small>CREATIVE DEVELOPER</small>
+                          </div>
+                      </div>
+                        <span class="photo-sticker">A little<br>bit of me ↗</span>
+                    </div>
+
+                    <div class="hero-note">
+                        <span>01 / INTRODUCTION</span>
+                        <span>MADE WITH CURIOSITY</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        await moveWorker(workers.architect, section);
+
+        section.classList.add("constructed");
+
+        const eyebrow = content.querySelector(".eyebrow");
+        const title = content.querySelector(".hero-title");
+        const summary = content.querySelector(".hero-summary");
+        const availability = content.querySelector(".availability-text");
+
+        await moveWorker(workers.writer, eyebrow);
+
+        await typeText(eyebrow, data.profile.kicker, id, 12);
+
+        await moveWorker(workers.writer, title);
+
+        const titleParts = data.profile.name.split(" ");
+
+        title.innerHTML = `
+            <span class="title-small">Hello, I'm</span>
+            <span class="title-name"></span>
+            <span class="title-role"></span>
+        `;
+
+        await typeText(
+            title.querySelector(".title-name"),
+            titleParts.join(" "),
+            id,
+            65
+        );
+
+        await typeText(
+            title.querySelector(".title-role"),
+            data.profile.title,
+            id,
+            24
+        );
+
+        showBotMessage("Hello! 👋", title);
+
+        await moveWorker(workers.writer, summary);
+
+        await typeText(summary, data.profile.summary, id, 12);
+
+        await moveWorker(workers.writer, availability);
+
+        await typeText(
+            availability,
+            data.profile.availability,
+            id,
+            18
+        );
+
+        await printImageWithSwarm(content.querySelector(".photo-frame"), id);
+
+        await moveWorker(workers.finisher, section);
+
+        section.classList.add("polished");
+
+        return section;
+    }
+
+    async function constructAbout(data, id) {
+        const section = createSection("about", "about-section");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">01 — ABOUT</span>
+                <h2>More than a <em>profile.</em></h2>
+            </div>
+
+            <div class="about-layout">
+                <div class="about-lead"></div>
+
+                <div class="about-details">
+                    <p class="about-body"></p>
+                    <div class="about-facts"></div>
+                </div>
+            </div>
+        `;
+
+        await moveWorker(workers.architect, section);
+
+        section.classList.add("constructed");
+
+        const lead = content.querySelector(".about-lead");
+        const body = content.querySelector(".about-body");
+        const facts = content.querySelector(".about-facts");
+
+        await moveWorker(workers.writer, lead);
+        await typeText(lead, data.about.lead, id, 16);
+
+        await moveWorker(workers.writer, body);
+        await typeText(body, data.about.body, id, 12);
+
+        for (const fact of data.about.facts) {
+            const item = createElement("div", "fact-card");
+
+            item.innerHTML = `
+                <strong>${escapeHTML(fact.value)}</strong>
+                <span>${escapeHTML(fact.label)}</span>
+            `;
+
+            facts.appendChild(item);
+
+            await moveWorker(workers.artist, item);
+            await drawElement(item, id);
+        }
+
+        await moveWorker(workers.finisher, section);
+
+        section.classList.add("polished");
+
+        return section;
+    }
+
+    async function constructEducation(data, id) {
+    if (!data.education) return;
+
+    const section = createSection("education", "education-section");
+    const content = section.querySelector(".section-content");
+
+    content.innerHTML = `
+        <div class="section-heading">
+            <span class="section-number">02 — EDUCATION</span>
+            <h2>Learning to <em>build.</em></h2>
+        </div>
+
+        <div class="education-card">
+            <div class="education-icon">✦</div>
+
+            <div class="education-details">
+                <span class="education-label">MY COLLEGE</span>
+                <h3>${escapeHTML(data.education.institution)}</h3>
+                <p>${escapeHTML(data.education.description)}</p>
+
+                <a href="${safeURL(data.education.url)}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Visit college website ↗
+                </a>
+            </div>
+        </div>
+    `;
+
+    await moveWorker(workers.architect, section);
+
+    section.classList.add("constructed");
+
+    await moveWorker(workers.artist, content.querySelector(".education-card"));
+    await drawElement(content.querySelector(".education-card"), id);
+
+    await moveWorker(workers.finisher, section);
+
+    section.classList.add("polished");
+
+    return section;
+}
+
+    async function constructSkills(data, id) {
+        const section = createSection("skills", "skills-section");
+        const content = section.querySelector(".section-content");
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">03 — MY TOOLKIT</span>
+                <h2>Things I'm <em>growing.</em></h2>
+                <p class="section-intro"></p>
+            </div>
+            <div class="skills-grid"></div>`;
+        await moveWorker(workers.architect, section);
+        section.classList.add("constructed");
+        await typeText(content.querySelector(".section-intro"), data.skills.intro, id, 12);
+        const grid = content.querySelector(".skills-grid");
+        for (const skill of data.skills.items) {
+            const card = createElement("article", "skill-card");
+            card.innerHTML = `
+                <div class="skill-card-top">
+                    <span class="skill-status">${escapeHTML(skill.status)}</span>
+                    <span class="skill-percent">${Number(skill.level) || 0}%</span>
+                </div>
+                <h3>${escapeHTML(skill.name)}</h3>
+                <div class="skill-tags">${skill.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}</div>
+                <div class="skill-track"><div class="skill-fill" style="--skill-level:${Number(skill.level) || 0}%"></div></div>`;
+            grid.appendChild(card);
+            await moveWorker(workers.artist, card);
+            await drawElement(card, id);
+            card.classList.add("skill-visible");
+        }
+        section.classList.add("polished");
+        return section;
+    }
+
+    async function constructProjects(data, id) {
+        const section = createSection("projects", "projects-section");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">03 — SELECTED WORK</span>
+                <h2>Ideas made <em>visible.</em></h2>
+                <p class="section-intro"></p>
+            </div>
+
+            <div class="projects-grid"></div>
+        `;
+
+        await moveWorker(workers.architect, section);
+
+        section.classList.add("constructed");
+
+        const intro = content.querySelector(".section-intro");
+
+        await moveWorker(workers.writer, intro);
+        await typeText(intro, data.projects.intro, id, 14);
+
+        const grid = content.querySelector(".projects-grid");
+
+        for (const [index, project] of data.projects.items.entries()) {
+            const card = createElement("article", "project-card");
+
+            card.innerHTML = `
+            <div class="project-art art-${["one", "two", "three"][index % 3]}"
+                style="--project-color:${escapeHTML(project.color || "#d9d1e9")}">
+
+                <div class="art-decoration"></div>
+
+                <span class="project-art-number">
+                    ${escapeHTML(project.number)}
+                </span>
+
+                <span class="project-art-caption">
+                    ${escapeHTML(project.caption)}
+                </span>
+            </div>
+
+            <div class="project-info">
+                <div class="project-meta">
+                    <span>${escapeHTML(project.type)}</span>
+                    <span>${escapeHTML(project.year)}</span>
+                </div>
+              
+                <h3>${escapeHTML(project.name)}</h3>
+              
+                <p>${escapeHTML(project.description)}</p>
+              
+                <div class="project-status">
+                    ${escapeHTML(project.status)}
+                </div>
+
+                <a href="${safeURL(project.url)}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Explore project ↗
+                </a>
+            </div>
+        `;
+
+            grid.appendChild(card);
+
+            await moveWorker(workers.artist, card.querySelector(".project-art"));
+
+            await drawElement(
+                card.querySelector(".project-art"),
+                id
+            );
+
+            await moveWorker(workers.writer, card.querySelector("h3"));
+
+            card.classList.add("project-visible");
+        }
+
+        await moveWorker(workers.finisher, section);
+
+        section.classList.add("polished");
+
+        return section;
+    }
+
+    async function constructJourney(data, id) {
+        const section = createSection("journey", "journey-section");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">04 — THE JOURNEY</span>
+                <h2>Still becoming <em>something.</em></h2>
+                <p class="section-intro"></p>
+            </div>
+
+            <div class="timeline"></div>
+        `;
+
+        await moveWorker(workers.architect, section);
+
+        section.classList.add("constructed");
+
+        const intro = content.querySelector(".section-intro");
+
+        await moveWorker(workers.writer, intro);
+        await typeText(intro, data.journey.intro, id, 13);
+
+        const timeline = content.querySelector(".timeline");
+
+        for (const item of data.journey.items) {
+            const entry = createElement("article", "timeline-entry");
+
+            entry.innerHTML = `
+                <span class="timeline-date">
+                    ${escapeHTML(item.date)}
+                </span>
+
+                <div class="timeline-content">
+                    <h3>${escapeHTML(item.title)}</h3>
+                    <p>${escapeHTML(item.description)}</p>
+                </div>
+            `;
+
+            timeline.appendChild(entry);
+
+            await moveWorker(workers.artist, entry);
+
+            await drawElement(entry, id);
+        }
+
+        await moveWorker(workers.finisher, section);
+
+        section.classList.add("polished");
+
+        return section;
+    }
+
+    async function constructContact(data, id) {
+        const section = createSection("contact", "contact-section");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="contact-card">
+                <span class="section-number">05 — SAY HELLO</span>
+
+                <h2>Something good<br>starts with <em>hello.</em></h2>
+
+                <p class="contact-copy"></p>
+
+                <a class="contact-button" href="#">
+                    Get in touch ↗
+                </a>
+
+                <div class="contact-socials"></div>
+                <div class="contact-email"></div>
+            </div>
+        `;
+
+        await moveWorker(workers.architect, section);
+
+        section.classList.add("constructed");
+
+        const copy = content.querySelector(".contact-copy");
+
+        await moveWorker(workers.writer, copy);
+        await typeText(copy, data.contact.copy, id, 14);
+
+        const email = content.querySelector(".contact-email");
+        const button = content.querySelector(".contact-button");
+
+        const validEmail = data.profile.email &&
+            data.profile.email !== "hello@example.com";
+
+        if (validEmail) {
+            button.href = "mailto:" + data.profile.email;
+            email.textContent = data.profile.email;
+        } else {
+            button.href = "#";
+            button.addEventListener("click", event => {
+                event.preventDefault();
+                alert("Add your real email address in content.json.");
+            });
+
+            email.textContent = "Add your email in content.json";
+        }
+
+        const socials = content.querySelector(".contact-socials");
+
+socials.innerHTML = (data.socials || []).map(social => `
+    <a href="${safeURL(social.url)}"
+       target="_blank"
+       rel="noopener noreferrer">
+        ${escapeHTML(social.label)} ↗
+    </a>
+`).join("");
+
+        await moveWorker(workers.artist, content.querySelector(".contact-card"));
+
+        await drawElement(
+            content.querySelector(".contact-card"),
+            id
+        );
+
+        await moveWorker(workers.finisher, section);
+
+        section.classList.add("polished");
+
+        return section;
+    }
+
+    function constructFooter(data) {
+        const footer = document.getElementById("site-footer");
+
+        footer.innerHTML = `
+            <div class="footer-inner">
+                <span>© ${new Date().getFullYear()} ${escapeHTML(data.profile.name)}</span>
+                <span>Made with curiosity and a little help from a tiny crew.</span>
+                <a href="#home">Back to top ↑</a>
+            </div>
+        `;
+    }
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
+    }
+
+    function safeURL(value) {
+        try {
+            const url = new URL(value, window.location.href);
+
+            if (["http:", "https:", "mailto:"].includes(url.protocol) ||
+                value.startsWith("#")) {
+                return escapeHTML(value);
+            }
+        } catch (_) {}
+
+        return "#contact";
+    }
+
+    async function architectTask(data, id) {
+        setStatus("architect", "Building the layout");
+
+        await createNavigation(data, id);
+        await constructHero(data, id);
+        await constructAbout(data, id);
+        await constructEducation(data, id);
+        await constructSkills(data, id);
+        await constructProjects(data, id);
+        await constructJourney(data, id);
+        await constructContact(data, id);
+
+        setStatus("architect", "Structure complete");
+    }
+
+    async function writerTask(data, id) {
+        setStatus("writer", "Preparing the content");
+
+        // The writer joins the architect's work as soon as
+        // the relevant DOM elements become available.
+        while (!skipped && id === constructionId &&
+               !document.querySelector(".hero-title")) {
+            await sleep(100);
+        }
+
+        if (id !== constructionId) return;
+
+        setStatus("writer", "Writing the portfolio");
+
+        // Actual typing is coordinated by each section builder.
+        // The separate worker remains visible during construction.
+        await waitForResume(id);
+
+        setStatus("writer", "Content complete");
+    }
+
+    async function artistTask(data, id) {
+        setStatus("artist", "Preparing visual elements");
+
+        while (!skipped && id === constructionId &&
+               !document.querySelector(".hero-visual")) {
+            await sleep(100);
+        }
+
+        if (id !== constructionId) return;
+
+        setStatus("artist", "Creating the visuals");
+
+        await waitForResume(id);
+
+        setStatus("artist", "Visuals complete");
+    }
+
+    async function finisherTask(data, id) {
+        setStatus("finisher", "Preparing finishing touches");
+
+        while (!skipped && id === constructionId &&
+               !document.querySelector(".site-header")) {
+            await sleep(100);
+        }
+
+        if (id !== constructionId) return;
+
+        setStatus("finisher", "Polishing the details");
+
+        await waitForResume(id);
+
+        setStatus("finisher", "Ready");
+    }
+
+    async function runConstruction() {
+        if (running) return;
+
+        running = true;
+        paused = false;
+        skipped = false;
+
+        const id = ++constructionId;
+
+        document.getElementById("construction-message").style.display = "flex";
+
+        document.getElementById("site-footer").innerHTML = "";
+
+        siteRoot.innerHTML = "";
+
+        Object.values(workers).forEach(worker => {
+            worker.classList.add("worker-active");
+        });
+
+        try {
+            const response = await fetch("content.json");
+
+            if (!response.ok) {
+                throw new Error("Could not load content.json");
+            }
+
+            const data = await response.json();
+
+            /*
+             * All four crew members have independent tasks.
+             * The architect coordinates DOM construction.
+             * Writer, artist and finisher perform their actions
+             * during construction rather than after a fake loader.
+             */
+
+            const crew = [
+                writerTask(data, id),
+                artistTask(data, id),
+                finisherTask(data, id)
+            ];
+
+            await architectTask(data, id);
+
+            await Promise.all(crew);
+
+            if (skipped || id !== constructionId) return;
+
+            constructFooter(data);
+
+            document.getElementById("construction-message").innerHTML =
+                `<span class="message-dot finished"></span>
+                 Your digital space is ready.`;
+
+            Object.values(workers).forEach(hideWorker);
+
+            setStatus("architect", "Done ✓");
+            setStatus("writer", "Done ✓");
+            setStatus("artist", "Done ✓");
+            setStatus("finisher", "Done ✓");
+
+            siteRoot.classList.add("site-ready");
+
+        } catch (error) {
+            if (error.message !== "Construction restarted") {
+                console.error(error);
+
+                document.getElementById("construction-message").textContent =
+                    "Something went wrong. Run the website using a local server.";
+            }
+        } finally {
+            if (id === constructionId) {
+                running = false;
+            }
+        }
+    }
+
+    function skipConstruction() {
+        skipped = true;
+        paused = false;
+
+        // A replay is used to build the complete site without
+        // the character-by-character construction.
+        constructionId++;
+        running = false;
+
+        fetch("content.json")
+            .then(response => response.json())
+            .then(data => buildInstantly(data))
+            .catch(error => console.error(error));
+    }
+
+    async function buildInstantly(data) {
+        siteRoot.innerHTML = "";
+        document.getElementById("site-footer").innerHTML = "";
+
+        const id = ++constructionId;
+
+        // Build all sections using the same real DOM constructors.
+        await createNavigationInstant(data);
+        await heroInstant(data);
+        await aboutInstant(data);
+        await educationInstant(data);
+        await skillsInstant(data);
+        await projectsInstant(data);
+        await journeyInstant(data);
+        await contactInstant(data);
+
+        constructFooter(data);
+
+        document.getElementById("construction-message").innerHTML =
+            `<span class="message-dot finished"></span>
+             Your digital space is ready.`;
+
+        Object.values(workers).forEach(hideWorker);
+
+        setStatus("architect", "Done ✓");
+        setStatus("writer", "Done ✓");
+        setStatus("artist", "Done ✓");
+        setStatus("finisher", "Done ✓");
+
+        running = false;
+        paused = false;
+    }
+
+    async function createNavigationInstant(data) {
+        const nav = document.createElement("header");
+        nav.className = "site-header constructed polished";
+        nav.innerHTML = `
+            <div class="header-inner">
+                <a class="brand" href="#home">
+                    <span class="brand-mark">✳</span>
+                    <span class="brand-name">${escapeHTML(data.site.brand)}</span>
+                </a>
+                <nav class="main-nav" aria-label="Main navigation">
+                    <a href="#about">About</a>
+                    <a href="#education">Education</a>
+                    <a href="#skills">Skills</a>
+                    <a href="#projects">Projects</a>
+                    <a href="#journey">Journey</a>
+                </nav>
+                <a href="#contact" class="nav-contact">Let's talk <span>↗</span></a>
+            </div>`;
+        siteRoot.appendChild(nav);
+    }
+
+    async function heroInstant(data) {
+        const section = createSection("home", "hero-section constructed polished");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <div class="eyebrow">${escapeHTML(data.profile.kicker)}</div>
+
+                    <h1 class="hero-title">
+                        <span class="title-small">Hello, I'm</span>
+                        <span class="title-name">${escapeHTML(data.profile.name)}</span>
+                        <span class="title-role">${escapeHTML(data.profile.title)}</span>
+                    </h1>
+
+                    <p class="hero-summary">${escapeHTML(data.profile.summary)}</p>
+
+                    <div class="hero-actions">
+                        <a href="#projects" class="primary-button">Explore my work ↗</a>
+                        <a href="#about" class="text-button">More about me ↓</a>
+                    </div>
+
+                    <div class="hero-availability">
+                        <span class="availability-dot"></span>
+                        ${escapeHTML(data.profile.availability)}
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="photo-frame">
+                        <div class="photo-placeholder">
+                            <img src="profile.jpg" alt="Portrait of Aryan Sahu"
+                                 onload="this.classList.add('photo-printed');"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="photo-fallback">
+                                <span class="photo-symbol">AS</span>
+                                <strong>ARYAN SAHU</strong>
+                                <small>CREATIVE DEVELOPER</small>
+                            </div>
+                        </div>
+                        <span class="photo-sticker">A little<br>bit of me ↗</span>
+                    </div>
+
+                    <div class="hero-note">
+                        <span>01 / INTRODUCTION</span>
+                        <span>MADE WITH CURIOSITY</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function aboutInstant(data) {
+        const section = createSection("about", "about-section constructed polished");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">01 — ABOUT</span>
+                <h2>More than a <em>profile.</em></h2>
+            </div>
+
+            <div class="about-layout">
+                <div class="about-lead">${escapeHTML(data.about.lead)}</div>
+
+                <div class="about-details">
+                    <p class="about-body">${escapeHTML(data.about.body)}</p>
+
+                    <div class="about-facts">
+                        ${data.about.facts.map(f => `
+                            <div class="fact-card drawn">
+                                <strong>${escapeHTML(f.value)}</strong>
+                                <span>${escapeHTML(f.label)}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function educationInstant(data) {
+    if (!data.education) return;
+
+    const section = createSection(
+        "education",
+        "education-section constructed polished"
+    );
+
+    const content = section.querySelector(".section-content");
+
+    content.innerHTML = `
+        <div class="section-heading">
+            <span class="section-number">02 — EDUCATION</span>
+            <h2>Learning to <em>build.</em></h2>
+        </div>
+
+        <div class="education-card drawn">
+            <div class="education-icon">✦</div>
+
+            <div class="education-details">
+                <span class="education-label">MY COLLEGE</span>
+
+                <h3>${escapeHTML(data.education.institution)}</h3>
+
+                <p>${escapeHTML(data.education.description)}</p>
+
+                <a href="${safeURL(data.education.url)}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Visit college website ↗
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+    async function skillsInstant(data) {
+        const section = createSection("skills", "skills-section constructed polished");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">02 — MY TOOLKIT</span>
+                <h2>Things I'm <em>growing.</em></h2>
+                <p class="section-intro">${escapeHTML(data.skills.intro)}</p>
+            </div>
+
+            <div class="skills-grid">
+                ${data.skills.items.map(skill => `
+                    <article class="skill-card drawn skill-visible">
+                        <div class="skill-card-top">
+                            <span class="skill-status">${escapeHTML(skill.status)}</span>
+                            <span class="skill-percent">${skill.level}%</span>
+                        </div>
+
+                        <h3>${escapeHTML(skill.name)}</h3>
+
+                        <div class="skill-tags">
+                            ${skill.tags.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}
+                        </div>
+
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--skill-level:${skill.level}%"></div>
+                        </div>
+                    </article>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    async function projectsInstant(data) {
+        const section = createSection("projects", "projects-section constructed polished");
+        const content = section.querySelector(".section-content");
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">03 — SELECTED WORK</span>
+                <h2>Ideas made <em>visible.</em></h2>
+                <p class="section-intro">${escapeHTML(data.projects.intro)}</p>
+            </div>
+            <div class="projects-grid">
+                ${data.projects.items.map((project, index) => `
+                    <article class="project-card project-visible">
+                        <div class="project-art art-${["one", "two", "three"][index % 3]} drawn"
+                             style="--project-color:${escapeHTML(project.color || "#d9d1e9")}">
+                            <div class="art-decoration"></div>
+                            <span class="project-art-number">${escapeHTML(project.number)}</span>
+                            <span class="project-art-caption">${escapeHTML(project.caption)}</span>
+                        </div>
+                        <div class="project-info">
+                            <div class="project-meta">
+                                <span>${escapeHTML(project.type)}</span>
+                                <span>${escapeHTML(project.year)}</span>
+                            </div>
+                            <h3>${escapeHTML(project.name)}</h3>
+                            <p>${escapeHTML(project.description)}</p>
+                            <div class="project-status">${escapeHTML(project.status || "")}</div>
+                            <a href="${safeURL(project.url)}" target="_blank" rel="noopener noreferrer">Explore project ↗</a>
+                        </div>
+                    </article>`).join("")}
+            </div>`;
+    }
+
+    async function journeyInstant(data) {
+        const section = createSection("journey", "journey-section constructed polished");
+        const content = section.querySelector(".section-content");
+
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">04 — THE JOURNEY</span>
+                <h2>Still becoming <em>something.</em></h2>
+                <p class="section-intro">${escapeHTML(data.journey.intro)}</p>
+            </div>
+
+            <div class="timeline">
+                ${data.journey.items.map(item => `
+                    <article class="timeline-entry drawn">
+                        <span class="timeline-date">${escapeHTML(item.date)}</span>
+
+                        <div class="timeline-content">
+                            <h3>${escapeHTML(item.title)}</h3>
+                            <p>${escapeHTML(item.description)}</p>
+                        </div>
+                    </article>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    async function contactInstant(data) {
+        const section = createSection("contact", "contact-section constructed polished");
+        const content = section.querySelector(".section-content");
+
+        const validEmail = data.profile.email &&
+            data.profile.email !== "hello@example.com";
+
+        content.innerHTML = `
+            <div class="contact-card drawn">
+                <span class="section-number">05 — SAY HELLO</span>
+
+                <h2>Something good<br>starts with <em>hello.</em></h2>
+
+                <p class="contact-copy">${escapeHTML(data.contact.copy)}</p>
+
+                <a class="contact-button" href="${validEmail ? "mailto:" + escapeHTML(data.profile.email) : "#"}">
+                    Get in touch ↗
+                </a>
+
+                <div class="contact-email">
+                    ${validEmail ? escapeHTML(data.profile.email) : "Add your email in content.json"}
+                </div>
+                <div class="contact-socials">
+                    ${(data.socials || []).map(social => `
+                        <a href="${safeURL(social.url)}" target="_blank" rel="noopener noreferrer">
+                            ${escapeHTML(social.label)} ↗
+                        </a>`).join("")}
+                </div>
+            </div>
+        `;
+    }
+
+    /* ================= CONTROLS ================= */
+
+    document.getElementById("pause-btn").addEventListener("click", function () {
+        if (!running) return;
+
+        paused = !paused;
+
+        this.textContent = paused ? "▶ Resume" : "Ⅱ Pause";
+    });
+
+    document.getElementById("replay-btn").addEventListener("click", () => {
+        constructionId++;
+        running = false;
+        paused = false;
+        skipped = false;
+
+        document.getElementById("pause-btn").textContent = "Ⅱ Pause";
+
+        Object.values(workers).forEach(worker => {
+            worker.classList.remove("worker-active");
+        });
+
+        setTimeout(runConstruction, 150);
+    });
+
+    document.getElementById("skip-btn").addEventListener("click", skipConstruction);
+
+    document.getElementById("panel-toggle").addEventListener("click", function () {
+        const panel = document.getElementById("crew-panel");
+
+        panel.classList.toggle("collapsed");
+
+        const collapsed = panel.classList.contains("collapsed");
+        this.textContent = collapsed ? "+" : "−";
+        this.setAttribute("aria-expanded", String(!collapsed));
+        this.setAttribute("aria-label", collapsed ? "Expand crew panel" : "Collapse crew panel");
+    });
+
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const night = document.body.dataset.theme !== "dark";
+        document.body.dataset.theme = night ? "dark" : "light";
+        localStorage.setItem("digital-me-theme", night ? "dark" : "light");
+        const button = document.getElementById("theme-toggle");
+        button.querySelector(".theme-icon").textContent = night ? "☀" : "☾";
+        button.querySelector(".theme-label").textContent = night ? "Day" : "Night";
+        button.setAttribute("aria-label", night ? "Switch to light theme" : "Switch to night theme");
+    });
+
+    (function restoreTheme() {
+        const theme = localStorage.getItem("digital-me-theme") || "light";
+        document.body.dataset.theme = theme;
+        const button = document.getElementById("theme-toggle");
+        if (theme === "dark") {
+            button.querySelector(".theme-icon").textContent = "☀";
+            button.querySelector(".theme-label").textContent = "Day";
+            button.setAttribute("aria-label", "Switch to light theme");
+        }
+    })();
+
+    /* ================= START ================= */
+
+    runConstruction();
+
+    </script>
+
+</body>
+</html>

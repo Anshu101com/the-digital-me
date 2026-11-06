@@ -1,0 +1,162 @@
+{
+  "site": {
+    "brand": "THE DIGITAL ME",
+    "title": "The Digital Me — Aryan Sahu"
+  },
+  "profile": {
+    "name": "Aryan Sahu",
+    "initials": "AS",
+    "title": "Aspiring Creative Developer",
+    "kicker": "INDEPENDENT CREATIVE · ALWAYS GROWING",
+    "summary": "I turn curious ideas into thoughtful digital experiences. Every project is another step toward building something better.",
+    "note": "Always learning. Always building. Always reaching beyond yesterday.",
+    "email": "ARYANKUMARSAHU2007@GMAIL.COM",
+    "availability": "Open to conversations and opportunities"
+  },
+  "about": {
+    "lead": "I'm Aryan Sahu — a curious builder with a passion for technology, creativity, and turning ideas into reality.",
+    "body": "I'm exploring the world of software and digital experiences, learning by creating real projects and improving with every challenge. I believe progress comes from staying curious, experimenting, and pushing beyond what I already know. This portfolio captures what I'm building today and the possibilities I'm working toward.",
+    "facts": [
+      {
+        "value": "Curiosity",
+        "label": "MY STARTING POINT"
+      },
+      {
+        "value": "Building",
+        "label": "MY WAY OF LEARNING"
+      },
+      {
+        "value": "What's next?",
+        "label": "MY FAVOURITE QUESTION"
+      }
+    ]
+  },
+  "education": {
+    "institution": "Columbia Institute of Engineering & Technology (CIET), Raipur",
+    "description": "Currently pursuing my college education at Columbia Institute of Engineering & Technology, located in Tekari, Raipur, Chhattisgarh, affiliated with Chhattisgarh Swami Vivekanand Technical University (CSVTU), Bhilai.",
+    "url": "https://www.cietraipur.ac.in/"
+  },
+  "skills": {
+    "intro": "A growing toolkit, built through curiosity, experimentation, and the determination to reach higher.",
+    "items": [
+      {
+        "name": "Web Development",
+        "tags": [
+          "HTML",
+          "CSS",
+          "JavaScript"
+        ],
+        "level": 0,
+        "status": "LEARNING & BUILDING"
+      },
+      {
+        "name": "Application Development",
+        "tags": [
+          "Flutter",
+          "Dart",
+          "Kotlin"
+        ],
+        "level": 0,
+        "status": "EXPLORING & PRACTISING"
+      },
+      {
+        "name": "Creative Problem Solving",
+        "tags": [
+          "Research",
+          "Experimentation",
+          "Iteration"
+        ],
+        "level": 0,
+        "status": "GETTING BETTER"
+      },
+      {
+        "name": "Continuous Growth",
+        "tags": [
+          "Learning",
+          "Building",
+          "Improvement"
+        ],
+        "level": 0,
+        "status": "NEVER STANDING STILL"
+      }
+    ]
+  },
+  "projects": {
+    "intro": "Real projects, real challenges, and new lessons with every build. Explore what I'm working on.",
+    "items": [
+      {
+        "name": "For-Workout",
+        "type": "WEB APP · FITNESS",
+        "year": "2026",
+        "description": "A personal workout-tracking project designed to organise exercise routines, monitor progress, and keep fitness information accessible.",
+        "caption": "SMALL STEPS. STEADY PROGRESS.",
+        "number": "01",
+        "symbol": "↗",
+        "color": "#55D6BE",
+        "status": "COMPLETED",
+        "url": "https://github.com/Anshu101com/For-Workout"
+      },
+      {
+        "name": "Mor Panchayat",
+        "type": "DIGITAL PLATFORM · IN DEVELOPMENT",
+        "year": "2026",
+        "description": "A digital Panchayat platform focused on community information, member management, announcements, and more accessible local engagement.",
+        "caption": "TECHNOLOGY FOR COMMUNITY.",
+        "number": "02",
+        "symbol": "⌂",
+        "color": "#8B7CFF",
+        "status": "IN PROGRESS",
+        "url": "https://github.com/Anshu101com/mor-panchayat"
+      },
+      {
+        "name": "Bonding",
+        "type": "FAMILY APP · IN DEVELOPMENT",
+        "year": "2026",
+        "description": "A family-focused app concept designed to encourage connection through shared tasks, participation, and family activities.",
+        "caption": "TOGETHER MATTERS.",
+        "number": "03",
+        "symbol": "♡",
+        "color": "#FF8B9A",
+        "status": "IN PROGRESS",
+        "url": "https://github.com/Anshu101com/bonding"
+      }
+    ]
+  },
+  "journey": {
+    "intro": "I'm building my future one experiment at a time. The goal isn't to know everything today — it's to keep becoming better.",
+    "items": [
+      {
+        "date": "THE BEGINNING",
+        "title": "Curiosity became action",
+        "description": "Started exploring how software, technology, and design can turn ideas into useful things."
+      },
+      {
+        "date": "RIGHT NOW",
+        "title": "Learning by building",
+        "description": "Developing personal projects, solving problems, and learning new tools through hands-on experience."
+      },
+      {
+        "date": "WHAT'S NEXT",
+        "title": "Reaching higher",
+        "description": "Taking on bigger challenges, improving technical skills, and building projects with a real purpose."
+      }
+    ]
+  },
+  "contact": {
+    "copy": "Have an interesting idea, a project to discuss, or an opportunity to share? I'd love to hear from you."
+  },
+  "socials": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/Anshu101com"
+    },
+    {
+      "label": "Instagram",
+      "url": "https://www.instagram.com/itz_anshu2823/"
+    },
+    {
+      "label": "Email",
+      "url": "mailto:ARYANKUMARSAHU2007@GMAIL.COM"
+    }
+  ]
+}
