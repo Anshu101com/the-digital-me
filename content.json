@@ -94,7 +94,8 @@
         "symbol": "↗",
         "color": "#55D6BE",
         "status": "COMPLETED",
-        "url": "https://github.com/Anshu101com/For-Workout"
+        "url": "https://github.com/Anshu101com/For-Workout",
+        "image": "images/for-workout.jpg"
       },
       {
         "name": "Mor Panchayat",
@@ -106,7 +107,8 @@
         "symbol": "⌂",
         "color": "#8B7CFF",
         "status": "IN PROGRESS",
-        "url": "https://github.com/Anshu101com/mor-panchayat"
+        "url": "https://github.com/Anshu101com/mor-panchayat",
+        "image": "images/mor-panchayat.jpg"
       },
       {
         "name": "Bonding",
@@ -118,7 +120,8 @@
         "symbol": "♡",
         "color": "#FF8B9A",
         "status": "IN PROGRESS",
-        "url": "https://github.com/Anshu101com/bonding"
+        "url": "https://github.com/Anshu101com/bonding",
+        "image": "images/bonding.jpg"
       }
     ]
   },
