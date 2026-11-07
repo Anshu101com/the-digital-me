@@ -1,0 +1,429 @@
+/* =========================================================
+   THE DIGITAL ME — BOT FIX PACK
+   Visual fixes for the existing swarm construction engine.
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   1. WORKER POSITIONING AND VISIBILITY
+   --------------------------------------------------------- */
+
+.worker-cursor {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+
+    z-index: 10001 !important;
+
+    pointer-events: none !important;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    will-change: transform, opacity;
+
+    transition:
+        transform 0.65s cubic-bezier(.22, 1, .36, 1),
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.worker-cursor.worker-active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Keep the bot character visible. */
+
+.worker-character {
+    position: relative;
+    z-index: 2;
+
+    flex-shrink: 0;
+
+    background: var(--worker-color, #6C73D8);
+}
+
+/* Bot name and role. */
+
+.worker-label {
+    position: relative;
+    z-index: 3;
+
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Do not allow bots to block website interaction. */
+
+.worker-cursor,
+.worker-character,
+.worker-label,
+.worker-trail {
+    pointer-events: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. BOT MOVEMENT TRAIL
+   --------------------------------------------------------- */
+
+.worker-trail {
+    opacity: 0;
+
+    transition: opacity 0.25s ease;
+}
+
+.worker-active .worker-trail {
+    opacity: 0.65;
+}
+
+
+/* ---------------------------------------------------------
+   3. PHOTO PRINTING AREA
+   --------------------------------------------------------- */
+
+.photo-frame {
+    position: relative;
+    isolation: isolate;
+}
+
+.photo-placeholder {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Image mosaic sits above the photo while printing. */
+
+.image-print-grid {
+    position: absolute;
+    inset: 0;
+
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+
+    overflow: hidden;
+
+    z-index: 5;
+
+    pointer-events: none;
+}
+
+/* Individual image pieces. */
+
+.image-print-tile {
+    position: relative;
+
+    display: block;
+
+    min-width: 0;
+    min-height: 0;
+
+    background-repeat: no-repeat;
+
+    opacity: 0;
+
+    transform: translateY(5px) scale(.96);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease,
+        filter 0.3s ease;
+
+    filter: saturate(1);
+}
+
+/* A tile appears after its bot finishes it. */
+
+.image-print-tile.printed,
+.image-print-tile.printed {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+}
+
+/* Temporary scanning effect on the tile. */
+
+.image-print-tile.scanning {
+    opacity: 1;
+
+    filter: brightness(1.2);
+
+    outline: 1px solid rgba(255, 255, 255, .8);
+
+    z-index: 2;
+}
+
+/* The original image remains natural. */
+
+.photo-placeholder img {
+    position: relative;
+    z-index: 1;
+
+    filter: none !important;
+
+    transition: opacity 0.4s ease;
+}
+
+/* No colour overlays on the image. */
+
+.photo-placeholder::before,
+.photo-placeholder::after {
+    pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   4. PHOTO BOT APPEARANCE
+   --------------------------------------------------------- */
+
+/* Photo bots should appear above the photo area. */
+
+.worker-cursor:has(.worker-label small) {
+    transform-origin: center center;
+}
+
+/* Small entrance/exit movement. */
+
+.worker-cursor.worker-active .worker-character {
+    animation: photoBotFloat 1.5s ease-in-out infinite;
+}
+
+@keyframes photoBotFloat {
+    0% {
+        translate: 0 0;
+    }
+
+    50% {
+        translate: 0 -3px;
+    }
+
+    100% {
+        translate: 0 0;
+    }
+}
+
+
+/* ---------------------------------------------------------
+   5. FINISHER SCAN LINE
+   --------------------------------------------------------- */
+
+.finisher-scan-line {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+
+    height: 2px;
+
+    z-index: 100;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(82, 190, 255, .35),
+        #58c9ff,
+        rgba(82, 190, 255, .35),
+        transparent
+    );
+
+    box-shadow:
+        0 0 8px rgba(88, 201, 255, .6),
+        0 0 20px rgba(88, 201, 255, .25);
+}
+
+/* The scanning beam travels down the section. */
+
+.finisher-scan-line.scan-running {
+    animation: finisherScan 0.75s linear forwards;
+}
+
+@keyframes finisherScan {
+    0% {
+        top: 0;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+/* Scanning must never recolour the actual page. */
+
+.finisher-scan-line,
+.finisher-scan-line::before,
+.finisher-scan-line::after {
+    mix-blend-mode: normal;
+    filter: none;
+}
+
+
+/* ---------------------------------------------------------
+   6. LEARNING SECTION — VERTICAL CARDS
+   --------------------------------------------------------- */
+
+.learning-grid {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    gap: 16px !important;
+
+    width: 100%;
+}
+
+.learning-card {
+    width: 100% !important;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 18px;
+
+    box-sizing: border-box;
+}
+
+.learning-card > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.learning-mark {
+    flex-shrink: 0;
+}
+
+
+/* ---------------------------------------------------------
+   7. BOT MENU / CREW PANEL
+   --------------------------------------------------------- */
+
+.crew-panel {
+    position: fixed;
+
+    z-index: 10010;
+
+    pointer-events: auto;
+}
+
+.crew-heading button {
+    position: relative;
+    z-index: 2;
+
+    cursor: pointer;
+}
+
+.crew-members {
+    position: relative;
+}
+
+.crew-member {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+/* Keep the crew menu above the bot layer. */
+
+.crew-panel,
+.crew-panel * {
+    pointer-events: auto;
+}
+
+
+/* ---------------------------------------------------------
+   8. PREVENT UNWANTED COLOUR EFFECTS
+   --------------------------------------------------------- */
+
+/* Bot movement must not change website colours. */
+
+.worker-cursor * {
+    mix-blend-mode: normal;
+}
+
+/* Do not apply colour filters to constructed elements. */
+
+.portfolio-section,
+.portfolio-section .section-inner,
+.portfolio-section .section-content {
+    filter: none;
+}
+
+/* Keep the original photo colours. */
+
+.photo-frame img,
+.photo-placeholder img {
+    filter: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   9. RESPONSIVE ADJUSTMENTS
+   --------------------------------------------------------- */
+
+@media (max-width: 650px) {
+
+    .learning-grid {
+        display: flex !important;
+
+        flex-direction: column !important;
+    }
+
+    .learning-card {
+        width: 100% !important;
+    }
+
+    .worker-label {
+        font-size: 10px;
+    }
+
+    .worker-character {
+        transform: scale(.9);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   10. REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .worker-cursor {
+        transition-duration: 0.01ms !important;
+    }
+
+    .worker-active .worker-character {
+        animation: none !important;
+    }
+
+    .finisher-scan-line.scan-running {
+        animation-duration: 0.01ms !important;
+    }
+
+    .image-print-tile {
+        transition-duration: 0.01ms !important;
+    }
+}
