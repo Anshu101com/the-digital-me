@@ -9,6 +9,7 @@
 <meta name="description" content="The personal portfolio of Aryan Sahu — aspiring creative developer, curious builder, and technology enthusiast.">
 
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="fixes/bot-fixes.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -34,34 +35,34 @@
 
         <div class="crew-members">
             <div class="crew-member">
-                <span class="crew-avatar architect">A</span>
+                <span class="crew-avatar architect"><i></i><i></i><b></b></span>
                 <div>
-                    <strong>Architect</strong>
-                    <small id="architect-status">Waiting for work</small>
+                    <strong>Architect Bot</strong>
+                    <small id="architect-status">Plans sections, layout & navigation</small>
                 </div>
             </div>
 
             <div class="crew-member">
-                <span class="crew-avatar writer">W</span>
+                <span class="crew-avatar writer"><i></i><i></i><b></b></span>
                 <div>
-                    <strong>Writer</strong>
-                    <small id="writer-status">Waiting for work</small>
+                    <strong>Writer Bots</strong>
+                    <small id="writer-status">Builds text and section content</small>
                 </div>
             </div>
 
             <div class="crew-member">
-                <span class="crew-avatar artist">✦</span>
+                <span class="crew-avatar artist"><i></i><i></i><b></b></span>
                 <div>
-                    <strong>Artist</strong>
-                    <small id="artist-status">Waiting for work</small>
+                    <strong>Artist Bots</strong>
+                    <small id="artist-status">Prints photos, images & project art</small>
                 </div>
             </div>
 
             <div class="crew-member">
-                <span class="crew-avatar finisher">F</span>
+                <span class="crew-avatar finisher"><i></i><i></i><b></b></span>
                 <div>
-                    <strong>Finisher</strong>
-                    <small id="finisher-status">Waiting for work</small>
+                    <strong>Finisher Bot</strong>
+                    <small id="finisher-status">Polishes, checks & completes details</small>
                 </div>
             </div>
         </div>
@@ -257,6 +258,7 @@
             await waitForResume(id);
             if (skipped) {
                 element.textContent = value;
+                element.classList.add("text-built-clean");
                 return;
             }
             const tile = letters[index];
@@ -274,6 +276,7 @@
             hideWorker(bot);
             bot.remove();
         });
+        element.classList.add("text-built-clean");
     }
 
     function characterDelay(character, speed) {
@@ -325,8 +328,11 @@
             const rect = tile.getBoundingClientRect();
             bot.style.transform = `translate(${rect.left + rect.width / 2}px, ${rect.top + rect.height / 2}px)`;
             bot.classList.add("worker-active");
+            tile.classList.add("scanning");
+            await sleep(1050);
+            tile.classList.remove("scanning");
             tile.classList.add("printed");
-            await sleep(85);
+            await sleep(180);
         }
 
         imageBots.forEach(bot => {
@@ -369,9 +375,7 @@
                   <a href="#journey">Journey</a>
                 </nav>
 
-                <a href="#contact" class="nav-contact">
-                    Let's talk <span>↗</span>
-                </a>
+
             </div>
         `;
 
@@ -427,7 +431,7 @@
                           <img
                               src="profile.jpg"
                               alt="Portrait of Aryan Sahu"
-                              onload="this.classList.add('photo-printed');"
+                              
                               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                           >
 
@@ -505,6 +509,7 @@
         await moveWorker(workers.finisher, section);
 
         section.classList.add("polished");
+        section.classList.add("construction-clean");
 
         return section;
     }
@@ -572,24 +577,15 @@
 
     content.innerHTML = `
         <div class="section-heading">
-            <span class="section-number">02 — EDUCATION</span>
+            <span class="section-number">02 — HOW I LEARN & BUILD</span>
             <h2>Learning to <em>build.</em></h2>
+            <p class="section-intro">The people, platforms and tools helping me turn curiosity into working projects.</p>
         </div>
-
-        <div class="education-card">
-            <div class="education-icon">✦</div>
-
-            <div class="education-details">
-                <span class="education-label">MY COLLEGE</span>
-                <h3>${escapeHTML(data.education.institution)}</h3>
-                <p>${escapeHTML(data.education.description)}</p>
-
-                <a href="${safeURL(data.education.url)}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    Visit college website ↗
-                </a>
-            </div>
+        <div class="learning-grid">
+            <article class="learning-card"><span class="learning-mark">▶</span><div><small>CODING TEACHER</small><h3>YouTube & GitHub</h3><p>Learning concepts from tutorials and exploring real code, repositories and examples.</p></div></article>
+            <article class="learning-card"><span class="learning-mark">⌕</span><div><small>BUG FINDER</small><h3>Codex & Blackbox</h3><p>Finding issues, understanding code, debugging and improving implementations.</p></div></article>
+            <article class="learning-card"><span class="learning-mark">✓</span><div><small>TESTING TOOLKIT</small><h3>Chrome DevTools & Android Studio</h3><p>Checking layouts, behaviour, logs and app builds while testing my projects.</p></div></article>
+            <article class="learning-card education-learning-card"><span class="learning-mark">✦</span><div><small>COLLEGE EDUCATION</small><h3>${escapeHTML(data.education.institution)}</h3><p>${escapeHTML(data.education.description)}</p><a href="${safeURL(data.education.url)}" target="_blank" rel="noopener noreferrer">Visit college website ↗</a></div></article>
         </div>
     `;
 
@@ -597,8 +593,10 @@
 
     section.classList.add("constructed");
 
-    await moveWorker(workers.artist, content.querySelector(".education-card"));
-    await drawElement(content.querySelector(".education-card"), id);
+    for (const card of content.querySelectorAll(".learning-card")) {
+        await moveWorker(workers.artist, card);
+        await drawElement(card, id);
+    }
 
     await moveWorker(workers.finisher, section);
 
@@ -671,7 +669,7 @@
             card.innerHTML = `
             <div class="project-art art-${["one", "two", "three"][index % 3]}"
                 style="--project-color:${escapeHTML(project.color || "#d9d1e9")}">
-
+                ${project.image ? `<img class="project-image" src="${safeURL(project.image)}" alt="${escapeHTML(project.name)} project preview" onerror="this.remove();">` : `<div class="project-image-placeholder"><span>＋</span><small>PROJECT IMAGE</small></div>`}
                 <div class="art-decoration"></div>
 
                 <span class="project-art-number">
@@ -785,18 +783,9 @@
 
         content.innerHTML = `
             <div class="contact-card">
-                <span class="section-number">05 — SAY HELLO</span>
-
-                <h2>Something good<br>starts with <em>hello.</em></h2>
-
-                <p class="contact-copy"></p>
-
-                <a class="contact-button" href="#">
-                    Get in touch ↗
-                </a>
-
+                <span class="section-number">05 — FIND ME ONLINE</span>
+                <h2>Let's connect <em>elsewhere.</em></h2>
                 <div class="contact-socials"></div>
-                <div class="contact-email"></div>
             </div>
         `;
 
@@ -809,35 +798,17 @@
         await moveWorker(workers.writer, copy);
         await typeText(copy, data.contact.copy, id, 14);
 
-        const email = content.querySelector(".contact-email");
-        const button = content.querySelector(".contact-button");
-
-        const validEmail = data.profile.email &&
-            data.profile.email !== "hello@example.com";
-
-        if (validEmail) {
-            button.href = "mailto:" + data.profile.email;
-            email.textContent = data.profile.email;
-        } else {
-            button.href = "#";
-            button.addEventListener("click", event => {
-                event.preventDefault();
-                alert("Add your real email address in content.json.");
-            });
-
-            email.textContent = "Add your email in content.json";
-        }
-
         const socials = content.querySelector(".contact-socials");
-
-socials.innerHTML = (data.socials || []).map(social => `
-    <a href="${safeURL(social.url)}"
-       target="_blank"
-       rel="noopener noreferrer">
-        ${escapeHTML(social.label)} ↗
-    </a>
-`).join("");
-
+        const iconMap = {
+            GitHub: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 0-3 18.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.2-4.5-1.1-4.5-4.8 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.7 9.7 0 0 1 5.1 0c2-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.7-2.3 4.6-4.5 4.8.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5A9.5 9.5 0 0 0 12 2.5Z"/></svg>',
+            Instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" class="icon-fill"/></svg>',
+            Email: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>'
+        };
+        socials.innerHTML = (data.socials || []).map(social => `
+            <a class="social-icon-link ${social.label.toLowerCase()}" href="${safeURL(social.url)}" aria-label="${escapeHTML(social.label)}" title="${escapeHTML(social.label)}" ${social.label !== "Email" ? 'target="_blank" rel="noopener noreferrer"' : ''}>
+                ${iconMap[social.label] || ''}<span>${escapeHTML(social.label)}</span>
+            </a>
+        `).join("");
         await moveWorker(workers.artist, content.querySelector(".contact-card"));
 
         await drawElement(
@@ -1018,6 +989,8 @@ socials.innerHTML = (data.socials || []).map(social => `
             setStatus("finisher", "Done ✓");
 
             siteRoot.classList.add("site-ready");
+            await sleep(250);
+            window.scrollTo({ top: 0, behavior: "smooth" });
 
         } catch (error) {
             if (error.message !== "Construction restarted") {
@@ -1079,6 +1052,7 @@ socials.innerHTML = (data.socials || []).map(social => `
 
         running = false;
         paused = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     async function createNavigationInstant(data) {
@@ -1097,7 +1071,7 @@ socials.innerHTML = (data.socials || []).map(social => `
                     <a href="#projects">Projects</a>
                     <a href="#journey">Journey</a>
                 </nav>
-                <a href="#contact" class="nav-contact">Let's talk <span>↗</span></a>
+                
             </div>`;
         siteRoot.appendChild(nav);
     }
@@ -1184,40 +1158,22 @@ socials.innerHTML = (data.socials || []).map(social => `
     }
 
     async function educationInstant(data) {
-    if (!data.education) return;
-
-    const section = createSection(
-        "education",
-        "education-section constructed polished"
-    );
-
-    const content = section.querySelector(".section-content");
-
-    content.innerHTML = `
-        <div class="section-heading">
-            <span class="section-number">02 — EDUCATION</span>
-            <h2>Learning to <em>build.</em></h2>
-        </div>
-
-        <div class="education-card drawn">
-            <div class="education-icon">✦</div>
-
-            <div class="education-details">
-                <span class="education-label">MY COLLEGE</span>
-
-                <h3>${escapeHTML(data.education.institution)}</h3>
-
-                <p>${escapeHTML(data.education.description)}</p>
-
-                <a href="${safeURL(data.education.url)}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    Visit college website ↗
-                </a>
+        if (!data.education) return;
+        const section = createSection("education", "education-section constructed polished");
+        const content = section.querySelector(".section-content");
+        content.innerHTML = `
+            <div class="section-heading">
+                <span class="section-number">02 — HOW I LEARN & BUILD</span>
+                <h2>Learning to <em>build.</em></h2>
+                <p class="section-intro">The people, platforms and tools helping me turn curiosity into working projects.</p>
             </div>
-        </div>
-    `;
-}
+            <div class="learning-grid">
+                <article class="learning-card drawn"><span class="learning-mark">▶</span><div><small>CODING TEACHER</small><h3>YouTube & GitHub</h3><p>Learning concepts from tutorials and exploring real code, repositories and examples.</p></div></article>
+                <article class="learning-card drawn"><span class="learning-mark">⌕</span><div><small>BUG FINDER</small><h3>Codex & Blackbox</h3><p>Finding issues, understanding code, debugging and improving implementations.</p></div></article>
+                <article class="learning-card drawn"><span class="learning-mark">✓</span><div><small>TESTING TOOLKIT</small><h3>Chrome DevTools & Android Studio</h3><p>Checking layouts, behaviour, logs and app builds while testing my projects.</p></div></article>
+                <article class="learning-card education-learning-card drawn"><span class="learning-mark">✦</span><div><small>COLLEGE EDUCATION</small><h3>${escapeHTML(data.education.institution)}</h3><p>${escapeHTML(data.education.description)}</p><a href="${safeURL(data.education.url)}" target="_blank" rel="noopener noreferrer">Visit college website ↗</a></div></article>
+            </div>`;
+    }
 
     async function skillsInstant(data) {
         const section = createSection("skills", "skills-section constructed polished");
@@ -1267,6 +1223,7 @@ socials.innerHTML = (data.socials || []).map(social => `
                     <article class="project-card project-visible">
                         <div class="project-art art-${["one", "two", "three"][index % 3]} drawn"
                              style="--project-color:${escapeHTML(project.color || "#d9d1e9")}">
+                            ${project.image ? `<img class="project-image" src="${safeURL(project.image)}" alt="${escapeHTML(project.name)} project preview" onerror="this.remove();">` : `<div class="project-image-placeholder"><span>＋</span><small>PROJECT IMAGE</small></div>`}
                             <div class="art-decoration"></div>
                             <span class="project-art-number">${escapeHTML(project.number)}</span>
                             <span class="project-art-caption">${escapeHTML(project.caption)}</span>
@@ -1314,33 +1271,12 @@ socials.innerHTML = (data.socials || []).map(social => `
     async function contactInstant(data) {
         const section = createSection("contact", "contact-section constructed polished");
         const content = section.querySelector(".section-content");
-
-        const validEmail = data.profile.email &&
-            data.profile.email !== "hello@example.com";
-
-        content.innerHTML = `
-            <div class="contact-card drawn">
-                <span class="section-number">05 — SAY HELLO</span>
-
-                <h2>Something good<br>starts with <em>hello.</em></h2>
-
-                <p class="contact-copy">${escapeHTML(data.contact.copy)}</p>
-
-                <a class="contact-button" href="${validEmail ? "mailto:" + escapeHTML(data.profile.email) : "#"}">
-                    Get in touch ↗
-                </a>
-
-                <div class="contact-email">
-                    ${validEmail ? escapeHTML(data.profile.email) : "Add your email in content.json"}
-                </div>
-                <div class="contact-socials">
-                    ${(data.socials || []).map(social => `
-                        <a href="${safeURL(social.url)}" target="_blank" rel="noopener noreferrer">
-                            ${escapeHTML(social.label)} ↗
-                        </a>`).join("")}
-                </div>
-            </div>
-        `;
+        const iconMap = {
+            GitHub: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 0-3 18.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.2-4.5-1.1-4.5-4.8 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.7 9.7 0 0 1 5.1 0c2-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.7-2.3 4.6-4.5 4.8.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5A9.5 9.5 0 0 0 12 2.5Z"/></svg>',
+            Instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" class="icon-fill"/></svg>',
+            Email: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>'
+        };
+        content.innerHTML = `<div class="contact-card drawn"><span class="section-number">05 — FIND ME ONLINE</span><h2>Let's connect <em>elsewhere.</em></h2><div class="contact-socials">${(data.socials || []).map(social => `<a class="social-icon-link ${social.label.toLowerCase()}" href="${safeURL(social.url)}" aria-label="${escapeHTML(social.label)}" title="${escapeHTML(social.label)}" ${social.label !== "Email" ? 'target="_blank" rel="noopener noreferrer"' : ''}>${iconMap[social.label] || ''}<span>${escapeHTML(social.label)}</span></a>`).join("")}</div></div>`;
     }
 
     /* ================= CONTROLS ================= */
@@ -1407,6 +1343,7 @@ socials.innerHTML = (data.socials || []).map(social => `
     runConstruction();
 
     </script>
+    <script src="fixes/bot-fixes.js"></script>
 
 </body>
 </html>
